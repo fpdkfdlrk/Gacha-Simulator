@@ -38,6 +38,13 @@ button:disabled {
     margin-top: 10px;
     font-weight: bold;
 }
+.skin-done {
+    margin-top: 10px;
+    padding: 10px;
+    background: #2e4f2e;
+    color: #9dff9d;
+    border: 1px solid #4caf50;
+}
 </style>
 </head>
 <body>
@@ -60,9 +67,11 @@ button:disabled {
 </div>
 
 <div class="progress">
-    <p>🎨 스킨: <span id="skinProgress">0</span> / 450</p>
+    <p id="skinProgressText">🎨 스킨: <span id="skinProgress">0</span> / 450</p>
     <p>🏆 올콜렉트: <span id="allProgress">0</span> / 555</p>
 </div>
+
+<div id="skinResult"></div>
 
 <h3>📜 로그</h3>
 <div id="log"></div>
@@ -79,10 +88,13 @@ const tokenTable = [
     { p: 21, t: 1 }
 ];
 
-let openedBoxes = 0; // 실제 열린 상자
-let paidBoxes = 0;   // 결제된 상자
+let openedBoxes = 0;
+let paidBoxes = 0;
 let tokens = 0;
 let cards = 0;
+
+let skinAchieved = false;
+let skinAchievedCost = 0;
 
 function rollToken() {
     let r = Math.random() * 100;
@@ -106,7 +118,6 @@ function calculateCost(count) {
 function draw(n) {
     if (tokens >= 555) return;
 
-    // 🔴 버튼을 누른 순간 결제 확정
     paidBoxes += n;
 
     for (let i = 0; i < n; i++) {
@@ -148,7 +159,10 @@ function resetSim() {
     paidBoxes = 0;
     tokens = 0;
     cards = 0;
+    skinAchieved = false;
+    skinAchievedCost = 0;
     document.getElementById("log").innerHTML = "";
+    document.getElementById("skinResult").innerHTML = "";
     enableButtons();
     updateUI();
 }
@@ -172,6 +186,19 @@ function updateUI() {
 
     document.getElementById("skinProgress").innerText = Math.min(tokens, 450);
     document.getElementById("allProgress").innerText = Math.min(tokens, 555);
+
+    // 🎨 스킨 조건 달성 처리
+    if (!skinAchieved && tokens >= 450) {
+        skinAchieved = true;
+        skinAchievedCost = calculateCost(paidBoxes);
+
+        document.getElementById("skinResult").innerHTML = `
+            <div class="skin-done">
+                🎨 <b>스킨 교환 조건 달성!</b><br>
+                달성 시 사용 금액: <b>${skinAchievedCost.toLocaleString()}원</b>
+            </div>
+        `;
+    }
 
     if (tokens >= 555) {
         disableButtons();
