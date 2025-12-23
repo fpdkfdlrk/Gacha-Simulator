@@ -52,7 +52,8 @@ button:disabled {
 </div>
 
 <div class="stat">
-    <p>📦 상자 수: <span id="boxes">0</span></p>
+    <p>📦 열린 상자 수: <span id="openedBoxes">0</span></p>
+    <p>💳 결제 상자 수: <span id="paidBoxes">0</span></p>
     <p>🪪 카드 수: <span id="cards">0</span></p>
     <p>💰 토큰: <span id="tokens">0</span></p>
     <p>💸 사용 금액: <span id="cost">0</span> 원</p>
@@ -78,7 +79,8 @@ const tokenTable = [
     { p: 21, t: 1 }
 ];
 
-let boxes = 0;
+let openedBoxes = 0; // 실제 열린 상자
+let paidBoxes = 0;   // 결제된 상자
 let tokens = 0;
 let cards = 0;
 
@@ -104,10 +106,14 @@ function calculateCost(count) {
 function draw(n) {
     if (tokens >= 555) return;
 
+    // 🔴 버튼을 누른 순간 결제 확정
+    paidBoxes += n;
+
     for (let i = 0; i < n; i++) {
         if (tokens >= 555) break;
 
-        boxes++;
+        openedBoxes++;
+
         let gained = rollToken();
         tokens += gained;
         cards++;
@@ -119,8 +125,9 @@ function draw(n) {
             exchanged = true;
         }
 
-        addLog(boxes, gained, exchanged);
+        addLog(openedBoxes, gained, exchanged);
     }
+
     updateUI();
 }
 
@@ -130,14 +137,19 @@ function disableButtons() {
     document.getElementById("draw10").disabled = true;
 }
 
-function resetSim() {
-    boxes = 0;
-    tokens = 0;
-    cards = 0;
-    document.getElementById("log").innerHTML = "";
+function enableButtons() {
     document.getElementById("draw1").disabled = false;
     document.getElementById("draw5").disabled = false;
     document.getElementById("draw10").disabled = false;
+}
+
+function resetSim() {
+    openedBoxes = 0;
+    paidBoxes = 0;
+    tokens = 0;
+    cards = 0;
+    document.getElementById("log").innerHTML = "";
+    enableButtons();
     updateUI();
 }
 
@@ -151,10 +163,12 @@ function addLog(box, token, exchanged) {
 }
 
 function updateUI() {
-    document.getElementById("boxes").innerText = boxes;
+    document.getElementById("openedBoxes").innerText = openedBoxes;
+    document.getElementById("paidBoxes").innerText = paidBoxes;
     document.getElementById("cards").innerText = cards;
     document.getElementById("tokens").innerText = tokens;
-    document.getElementById("cost").innerText = calculateCost(boxes).toLocaleString();
+    document.getElementById("cost").innerText =
+        calculateCost(paidBoxes).toLocaleString();
 
     document.getElementById("skinProgress").innerText = Math.min(tokens, 450);
     document.getElementById("allProgress").innerText = Math.min(tokens, 555);
