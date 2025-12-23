@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>토큰 뽑기 시뮬레이터</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #1e1e1e;
+    color: #eee;
+    padding: 20px;
+}
+button {
+    margin: 5px;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+}
+#log {
+    margin-top: 20px;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #111;
+    padding: 10px;
+    font-size: 13px;
+}
+.stat {
+    margin-top: 10px;
+}
+.highlight {
+    color: #4caf50;
+}
+</style>
+</head>
+<body>
+
+<h2> 이터널 리턴 길티기어 콜라보 토큰 뽑기 시뮬레이터</h2>
+
+<div>
+    <button onclick="draw(1)">1회 뽑기</button>
+    <button onclick="draw(5)">5회 뽑기</button>
+    <button onclick="draw(10)">10회 뽑기</button>
+</div>
+
+<div>
+    <button onclick="runUntil(450)">450 토큰까지</button>
+    <button onclick="runUntil(555)">555 토큰까지</button>
+    <button onclick="resetSim()">리셋</button>
+</div>
+
+<div class="stat">
+    <p>📦 상자 수: <span id="boxes">0</span></p>
+    <p>🪪 카드 수: <span id="cards">0</span></p>
+    <p>💰 토큰: <span id="tokens">0</span></p>
+    <p>💸 사용 금액: <span id="cost">0</span> 원</p>
+</div>
+
+<h3>📜 로그</h3>
+<div id="log"></div>
+
+<script>
+const tokenTable = [
+    { p: 1, t: 100 },
+    { p: 3, t: 50 },
+    { p: 5, t: 30 },
+    { p: 5, t: 20 },
+    { p: 10, t: 10 },
+    { p: 20, t: 5 },
+    { p: 35, t: 3 },
+    { p: 21, t: 1 }
+];
+
+let boxes = 0;
+let tokens = 0;
+let cards = 0;
+
+function rollToken() {
+    let r = Math.random() * 100;
+    let acc = 0;
+    for (let item of tokenTable) {
+        acc += item.p;
+        if (r <= acc) return item.t;
+    }
+    return 0;
+}
+
+function calculateCost(count) {
+    let cost = 0;
+    cost += Math.floor(count / 10) * 10900;
+    count %= 10;
+    cost += Math.floor(count / 5) * 6000;
+    cost += (count % 5) * 1400;
+    return cost;
+}
+
+function draw(n) {
+    for (let i = 0; i < n; i++) {
+        boxes++;
+        let gained = rollToken();
+        tokens += gained;
+        cards++;
+
+        let exchanged = false;
+        if (cards >= 50) {
+            cards -= 50;
+            tokens += 100;
+            exchanged = true;
+        }
+
+        addLog(boxes, gained, exchanged);
+    }
+    updateUI();
+}
+
+function runUntil(target) {
+    while (tokens < target) {
+        draw(10);
+    }
+}
+
+function resetSim() {
+    boxes = 0;
+    tokens = 0;
+    cards = 0;
+    document.getElementById("log").innerHTML = "";
+    updateUI();
+}
+
+function addLog(box, token, exchanged) {
+    const log = document.getElementById("log");
+    const line = document.createElement("div");
+    line.innerHTML =
+        `[${box}번째] 토큰 ${token}개 획득` +
+        (exchanged ? ` <span class="highlight">▶ 카드 50장 교환 (+100)</span>` : "");
+    log.prepend(line);
+}
+
+function updateUI() {
+    document.getElementById("boxes").innerText = boxes;
+    document.getElementById("cards").innerText = cards;
+    document.getElementById("tokens").innerText = tokens;
+    document.getElementById("cost").innerText = calculateCost(boxes).toLocaleString();
+}
+</script>
+
+</body>
+</html>
