@@ -39,11 +39,19 @@ button:disabled {
     font-weight: bold;
 }
 .skin-done {
-    margin-top: 10px;
+    margin: 8px 0;
     padding: 10px;
     background: #2e4f2e;
     color: #9dff9d;
     border: 1px solid #4caf50;
+}
+.all-done {
+    margin-top: 15px;
+    padding: 12px;
+    background: #3b2e4f;
+    color: #d8b9ff;
+    border: 1px solid #8a63d2;
+    font-size: 15px;
 }
 </style>
 </head>
@@ -67,11 +75,12 @@ button:disabled {
 </div>
 
 <div class="progress">
-    <p id="skinProgressText">🎨 스킨: <span id="skinProgress">0</span> / 450</p>
+    <p>🎨 스킨: <span id="skinProgress">0</span> / 450</p>
+    <div id="skinResult"></div>
     <p>🏆 올콜렉트: <span id="allProgress">0</span> / 555</p>
 </div>
 
-<div id="skinResult"></div>
+<div id="allResult"></div>
 
 <h3>📜 로그</h3>
 <div id="log"></div>
@@ -95,6 +104,8 @@ let cards = 0;
 
 let skinAchieved = false;
 let skinAchievedCost = 0;
+let allAchieved = false;
+let allAchievedCost = 0;
 
 function rollToken() {
     let r = Math.random() * 100;
@@ -124,34 +135,31 @@ function draw(n) {
         if (tokens >= 555) break;
 
         openedBoxes++;
-
         let gained = rollToken();
         tokens += gained;
         cards++;
 
-        let exchanged = false;
         if (cards >= 50) {
             cards -= 50;
             tokens += 100;
-            exchanged = true;
+            addLog(openedBoxes, gained, true);
+        } else {
+            addLog(openedBoxes, gained, false);
         }
-
-        addLog(openedBoxes, gained, exchanged);
     }
-
     updateUI();
 }
 
 function disableButtons() {
-    document.getElementById("draw1").disabled = true;
-    document.getElementById("draw5").disabled = true;
-    document.getElementById("draw10").disabled = true;
+    ["draw1","draw5","draw10"].forEach(id =>
+        document.getElementById(id).disabled = true
+    );
 }
 
 function enableButtons() {
-    document.getElementById("draw1").disabled = false;
-    document.getElementById("draw5").disabled = false;
-    document.getElementById("draw10").disabled = false;
+    ["draw1","draw5","draw10"].forEach(id =>
+        document.getElementById(id).disabled = false
+    );
 }
 
 function resetSim() {
@@ -160,20 +168,20 @@ function resetSim() {
     tokens = 0;
     cards = 0;
     skinAchieved = false;
-    skinAchievedCost = 0;
-    document.getElementById("log").innerHTML = "";
+    allAchieved = false;
     document.getElementById("skinResult").innerHTML = "";
+    document.getElementById("allResult").innerHTML = "";
+    document.getElementById("log").innerHTML = "";
     enableButtons();
     updateUI();
 }
 
 function addLog(box, token, exchanged) {
-    const log = document.getElementById("log");
     const line = document.createElement("div");
     line.innerHTML =
         `[${box}번째] 토큰 ${token}개 획득` +
         (exchanged ? ` <span class="highlight">▶ 카드 50장 교환 (+100)</span>` : "");
-    log.prepend(line);
+    document.getElementById("log").prepend(line);
 }
 
 function updateUI() {
@@ -187,20 +195,24 @@ function updateUI() {
     document.getElementById("skinProgress").innerText = Math.min(tokens, 450);
     document.getElementById("allProgress").innerText = Math.min(tokens, 555);
 
-    // 🎨 스킨 조건 달성 처리
     if (!skinAchieved && tokens >= 450) {
         skinAchieved = true;
         skinAchievedCost = calculateCost(paidBoxes);
-
         document.getElementById("skinResult").innerHTML = `
             <div class="skin-done">
                 🎨 <b>스킨 교환 조건 달성!</b><br>
                 달성 시 사용 금액: <b>${skinAchievedCost.toLocaleString()}원</b>
-            </div>
-        `;
+            </div>`;
     }
 
-    if (tokens >= 555) {
+    if (!allAchieved && tokens >= 555) {
+        allAchieved = true;
+        allAchievedCost = calculateCost(paidBoxes);
+        document.getElementById("allResult").innerHTML = `
+            <div class="all-done">
+                🏆 <b>올콜렉트 달성!</b><br>
+                총 사용 금액: <b>${allAchievedCost.toLocaleString()}원</b>
+            </div>`;
         disableButtons();
     }
 }
